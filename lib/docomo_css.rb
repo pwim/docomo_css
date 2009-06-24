@@ -16,28 +16,24 @@ module DocomoCss
       cssfile.gsub! /\?.+/, ''
       css = TinyCss.new.read(cssfile)
 
-      pseudo_selectors = css.style.keys.reject { |v|
-        v !~ /a:(link|focus|visited)/
-      }
-      unless pseudo_selectors.empty?
-        style_style = TinyCss.new
-        pseudo_selectors.each do |v|
-          style_style.style[v] = css.style[v]
-          css.style.delete v
+      style_style = TinyCss.new
+      css.style.each do |selector, style|
+        if pseudo_selector?(selector)
+          style_style.style[selector] = style
+        else
+          (doc/(selector)).each do |element|
+            style_attr = element[:style]
+            style_attr = (!style_attr) ? stringify_style(style) :
+              [style_attr, stringify_style(style)].join(';')
+            element[:style] = style_attr
+          end
         end
-
+      end
+      unless style_style.style.keys.empty?
         style = %(<style type="text/css">#{ style_style.write_string }</style>)
         (doc/('head')).append style
       end
 
-      css.style.each do |selector, style|
-        (doc/(selector)).each do |element|
-          style_attr = element[:style]
-          style_attr = (!style_attr) ? stringify_style(style) :
-            [style_attr, stringify_style(style)].join(';')
-          element[:style] = style_attr
-        end
-      end
     end
 
     content = doc.to_html
@@ -47,6 +43,11 @@ module DocomoCss
   end
 
   private
+
+  def self.pseudo_selector?(k)
+    ["a:link", "a:focus", "a:visited"].include?(k)
+  end
+
   def self.stringify_style(style)
     style.map { |k, v| "#{ k }:#{ v }" }.join ';'
   end
