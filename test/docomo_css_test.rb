@@ -5,7 +5,7 @@ require 'docomo_css'
 
 class DocomoCssTest < Test::Unit::TestCase
   %w{ no_stylesheet empty_stylesheet element pseudo_selectors 
-      unicode_entity overlay
+      unicode_entity overlay multiple
   }.each do |s|
     define_method("test_#{s}") do
       e = expected(s)
