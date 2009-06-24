@@ -9,6 +9,9 @@ module DocomoCss
       ["a:link", "a:focus", "a:visited"].each do |k|
         @handlers[k] = PseudoSelectorHandler.new(k)
       end
+      (1..6).map {|i| "h#{i}"}.each do |k|
+        @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size})
+      end
     end
     @handlers
   end
@@ -69,6 +72,28 @@ module DocomoCss
 
     def stringify_style(style)
       style.map { |k, v| "#{ k }:#{ v }" }.join ';'
+    end
+  end
+
+  class UnsupportedStyleHandler < DefaultHandler
+    def initialize(selector, unsupported_styles)
+      super(selector)
+      @unsupported_styles = unsupported_styles
+    end
+
+    def replace(doc, style_style, style)
+      unsupported = TinyCss::OrderedHash.new
+      supported = TinyCss::OrderedHash.new
+      style.each do |k,v|
+        s = @unsupported_styles.include?(k) ? unsupported : supported
+        s[k] = v
+      end
+      (doc/(@selector)).each do |element|
+        style_attr = element[:style]
+        style_attr = (!style_attr) ? stringify_style(style) :
+          [style_attr, stringify_style(style)].join(';')
+        element[:style] = style_attr
+      end
     end
   end
 end
