@@ -61,14 +61,18 @@ module DocomoCss
   class DefaultHandler < Handler
     def replace(doc, style_style, style)
       (doc/(@selector)).each do |element|
-        style_attr = element[:style]
-        style_attr = (!style_attr) ? stringify_style(style) :
-          [style_attr, stringify_style(style)].join(';')
-        element[:style] = style_attr
+        add_style(element, style)
       end
     end
 
     private
+
+    def add_style(element, style)
+      style_attr = element[:style]
+      style_attr = (!style_attr) ? stringify_style(style) :
+        [style_attr, stringify_style(style)].join(';')
+      element[:style] = style_attr
+    end
 
     def stringify_style(style)
       style.map { |k, v| "#{ k }:#{ v }" }.join ';'
@@ -88,11 +92,17 @@ module DocomoCss
         s = @unsupported_styles.include?(k) ? unsupported : supported
         s[k] = v
       end
-      (doc/(@selector)).each do |element|
-        style_attr = element[:style]
-        style_attr = (!style_attr) ? stringify_style(style) :
-          [style_attr, stringify_style(style)].join(';')
-        element[:style] = style_attr
+      super(doc, style, supported) unless supported.keys.empty?
+      unless unsupported.keys.empty?
+        # BUG: assumes source contains no span wrapped in selector
+        wrapped_children = doc.search("#{@selector}/span")
+        if wrapped_children.empty?
+          (doc/("#{@selector}/")).wrap("<span></span>")
+          wrapped_children = doc.search("#{@selector}/span")
+        end
+        wrapped_children.each do |c|
+          add_style(c, unsupported)
+        end
       end
     end
   end
