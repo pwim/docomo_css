@@ -3,6 +3,16 @@ require 'tiny_css'
 
 module DocomoCss
 
+  def self.handlers
+    if @handlers.nil?
+      @handlers = Hash.new {|h,k| h[k] = DefaultHandler.new(k)}
+      ["a:link", "a:focus", "a:visited"].each do |k|
+        @handlers[k] = PseudoSelectorHandler.new(k)
+      end
+    end
+    @handlers
+  end
+
   def self.inline_css(content, css_dir)
     content.gsub! /&#(\d+);/, 'HTMLCSSINLINERESCAPE\1::::::::'
 
@@ -18,16 +28,7 @@ module DocomoCss
 
       style_style = TinyCss.new
       css.style.each do |selector, style|
-        if pseudo_selector?(selector)
-          style_style.style[selector] = style
-        else
-          (doc/(selector)).each do |element|
-            style_attr = element[:style]
-            style_attr = (!style_attr) ? stringify_style(style) :
-              [style_attr, stringify_style(style)].join(';')
-            element[:style] = style_attr
-          end
-        end
+        handlers[selector].replace(doc, style_style, style)
       end
       unless style_style.style.keys.empty?
         style = %(<style type="text/css">#{ style_style.write_string }</style>)
@@ -42,13 +43,32 @@ module DocomoCss
     content
   end
 
-  private
-
-  def self.pseudo_selector?(k)
-    ["a:link", "a:focus", "a:visited"].include?(k)
+  class Handler
+    def initialize(selector)
+      @selector = selector
+    end
   end
 
-  def self.stringify_style(style)
-    style.map { |k, v| "#{ k }:#{ v }" }.join ';'
+  class PseudoSelectorHandler < Handler
+    def replace(doc, style_style, style)
+      style_style.style[@selector] = style
+    end
+  end
+
+  class DefaultHandler < Handler
+    def replace(doc, style_style, style)
+      (doc/(@selector)).each do |element|
+        style_attr = element[:style]
+        style_attr = (!style_attr) ? stringify_style(style) :
+          [style_attr, stringify_style(style)].join(';')
+        element[:style] = style_attr
+      end
+    end
+
+    private
+
+    def stringify_style(style)
+      style.map { |k, v| "#{ k }:#{ v }" }.join ';'
+    end
   end
 end
