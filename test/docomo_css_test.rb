@@ -4,12 +4,18 @@ $LOAD_PATH << File.join(File.dirname(__FILE__), '..',  'lib')
 require 'docomo_css'
 
 class DocomoCssTest < Test::Unit::TestCase
-  %w{no_stylesheet empty_stylesheet element pseudo_selectors unicode_entity
+  %w{ no_stylesheet empty_stylesheet element pseudo_selectors 
+      unicode_entity overlay
   }.each do |s|
     define_method("test_#{s}") do
       e = expected(s)
       i = inline(s)
-      assert e == i, "#{e}[DID NOT MATCH]\n#{i}"
+      e_lines = e.split("\n")
+      i_lines = i.split("\n")
+      e_lines.each_with_index do |s,j|
+        assert_equal(s, i_lines[j])
+      end
+      assert_equal e, i, "#{s} did not match"
     end
   end
 
