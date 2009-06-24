@@ -4,23 +4,34 @@ $LOAD_PATH << File.join(File.dirname(__FILE__), '..',  'lib')
 require 'docomo_css'
 
 class DocomoCssTest < Test::Unit::TestCase
-  def test_inline_css_empty
-    s = DocomoCss.inline_css(no_stylesheet_xhtml, "")
-    assert_equal no_stylesheet_xhtml, s
+  %w{no_stylesheet empty_stylesheet element pseudo_selectors unicode_entity
+  }.each do |s|
+    define_method("test_#{s}") do
+      e = expected(s)
+      i = inline(s)
+      assert e == i, "#{e}[DID NOT MATCH]\n#{i}"
+    end
   end
 
-  def no_stylesheet_xhtml
-<<-EOD
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/1.1) 1.0//EN" "i-xhtml_4ja_10.dtd">
-<html xml:lang="ja" lang="ja" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <title>Foo</title>
-</head>
-<body>
-  Foo
-</body>
-</html>
-EOD
+  def inline(file_name)
+    DocomoCss.inline_css(html(file_name), data_path)
+  end
+
+  def html(file_name)
+    read_html("html", file_name)
+  end
+
+  def expected(file_name)
+    read_html("expected_html", file_name)
+  end
+
+  def read_html(dir, file_name)
+    File.open(File.join(data_path, dir, "#{file_name}.html")) do |f|
+      f.read
+    end
+  end
+
+  def data_path
+    File.join(File.dirname(__FILE__), "data") 
   end
 end

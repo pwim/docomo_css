@@ -1,0 +1,11 @@
+a:link {
+  color: white;
+}
+
+a:focus {
+  color: blue;
+}
+
+a:visited {
+  color: yellow;
+}
