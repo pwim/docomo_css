@@ -4,9 +4,12 @@ $LOAD_PATH << File.join(File.dirname(__FILE__), '..',  'lib')
 require 'docomo_css'
 
 class DocomoCssTest < Test::Unit::TestCase
-  %w{ no_stylesheet empty_stylesheet element pseudo_selectors 
-      unicode_entity overlay multiple
-  }.each do |s|
+  def self.data_path
+    File.join(File.dirname(__FILE__), "data") 
+  end
+
+  Dir.glob(File.join(data_path, "html", "*")) do |f|
+    s = File.basename(f,".html")
     define_method("test_#{s}") do
       e = expected(s)
       i = inline(s)
@@ -38,6 +41,6 @@ class DocomoCssTest < Test::Unit::TestCase
   end
 
   def data_path
-    File.join(File.dirname(__FILE__), "data") 
+    self.class.data_path
   end
 end
