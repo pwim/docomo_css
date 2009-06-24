@@ -1,2 +1,2 @@
-require 'docomo_css'
-ActionController::Base.send :include, DocomoCss
+require 'docomo_css/rails'
+ActionController::Base.send :include, DocomoCss::Rails
