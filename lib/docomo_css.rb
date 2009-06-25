@@ -10,7 +10,7 @@ module DocomoCss
         @handlers[k] = PseudoSelectorHandler.new(k)
       end
       (1..6).map {|i| "h#{i}"}.each do |k|
-        @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size})
+        @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size color})
       end
     end
     @handlers
