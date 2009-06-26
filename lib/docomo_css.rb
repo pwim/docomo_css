@@ -4,7 +4,7 @@ require 'tiny_css'
 module DocomoCss
 
   def self.handlers
-    if @handlers.nil?
+    unless defined?(@handlers)
       @handlers = Hash.new {|h,k| h[k] = DefaultHandler.new(k)}
       ["a:link", "a:focus", "a:visited"].each do |k|
         @handlers[k] = PseudoSelectorHandler.new(k)
@@ -17,7 +17,7 @@ module DocomoCss
   end
 
   def self.inline_css(content, css_dir)
-    content.gsub! /&#(\d+);/, 'HTMLCSSINLINERESCAPE\1::::::::'
+    content.gsub!(/&#(\d+);/, 'HTMLCSSINLINERESCAPE\1::::::::')
 
     doc = Hpricot(content)
 
@@ -26,7 +26,7 @@ module DocomoCss
       href = linknode['href'] or next
 
       cssfile = File.join(css_dir, href)
-      cssfile.gsub! /\?.+/, ''
+      cssfile.gsub!(/\?.+/, '')
       css = TinyCss.new.read(cssfile)
 
       style_style = TinyCss.new
@@ -42,7 +42,7 @@ module DocomoCss
 
     content = doc.to_html
 
-    content.gsub! /HTMLCSSINLINERESCAPE(\d+)::::::::/, '&#\1;'
+    content.gsub!(/HTMLCSSINLINERESCAPE(\d+)::::::::/, '&#\1;')
     content
   end
 
