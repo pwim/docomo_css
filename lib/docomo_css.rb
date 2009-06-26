@@ -5,12 +5,12 @@ module DocomoCss
 
   def self.handlers
     unless defined?(@handlers)
-      @handlers = Hash.new {|h,k| h[k] = DefaultHandler.new(k)}
+      element_handler = UnsupportedElementHandler.new(
+        (1..6).map {|i| "h#{i}"} + %w{p},
+        %w{font-size color})
+      @handlers = Hash.new {|h,k| h[k] = DefaultHandler.new(k, element_handler)}
       ["a:link", "a:focus", "a:visited"].each do |k|
         @handlers[k] = PseudoSelectorHandler.new(k)
-      end
-      (1..6).map {|i| "h#{i}"}.concat(%w{p}).each do |k|
-        @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size color})
       end
     end
     @handlers
@@ -59,51 +59,63 @@ module DocomoCss
   end
 
   class DefaultHandler < Handler
+    def initialize(selector, element_handler)
+      super(selector)
+      @element_handler = element_handler
+    end
+
     def replace(doc, style_style, style)
       (doc/(@selector)).each do |element|
-        add_style(element, style)
+        @element_handler.add_style(element, style)
+      end
+    end
+  end
+
+  class UnsupportedElementHandler
+    def initialize(unsupported_elements, unsupported_styles)
+      @unsupported_elements = unsupported_elements
+      @unsupported_styles = unsupported_styles
+    end
+
+    def add_style(element, style)
+      if @unsupported_elements.include?(element.name)
+        unsupported = TinyCss::OrderedHash.new
+        supported = TinyCss::OrderedHash.new
+        style.each do |k,v|
+          s = @unsupported_styles.include?(k) ? unsupported : supported
+          s[k] = v
+        end
+
+        #TODO: unit test
+        _add_style(element, supported) unless supported.keys.empty? 
+        
+        unless unsupported.keys.empty?
+          # BUG: assumes source contains no span wrapped in selector
+          wrapped_children = element.search("span")
+          if wrapped_children.empty?
+            element.search("/").wrap("<span></span>")
+            wrapped_children = element.search("span")
+          end
+          wrapped_children.each do |c|
+            add_style(c, unsupported)
+          end
+        end
+      else
+        _add_style(element, style)
       end
     end
 
-    private
-
-    def add_style(element, style)
+    def _add_style(element, style)
       style_attr = element[:style]
       style_attr = (!style_attr) ? stringify_style(style) :
         [style_attr, stringify_style(style)].join(';')
       element[:style] = style_attr
     end
 
+    private
+
     def stringify_style(style)
       style.map { |k, v| "#{ k }:#{ v }" }.join ';'
-    end
-  end
-
-  class UnsupportedStyleHandler < DefaultHandler
-    def initialize(selector, unsupported_styles)
-      super(selector)
-      @unsupported_styles = unsupported_styles
-    end
-
-    def replace(doc, style_style, style)
-      unsupported = TinyCss::OrderedHash.new
-      supported = TinyCss::OrderedHash.new
-      style.each do |k,v|
-        s = @unsupported_styles.include?(k) ? unsupported : supported
-        s[k] = v
-      end
-      super(doc, style, supported) unless supported.keys.empty?
-      unless unsupported.keys.empty?
-        # BUG: assumes source contains no span wrapped in selector
-        wrapped_children = doc.search("#{@selector}/span")
-        if wrapped_children.empty?
-          (doc/("#{@selector}/")).wrap("<span></span>")
-          wrapped_children = doc.search("#{@selector}/span")
-        end
-        wrapped_children.each do |c|
-          add_style(c, unsupported)
-        end
-      end
     end
   end
 end
