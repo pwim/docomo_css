@@ -38,8 +38,8 @@ module DocomoCss
         style = %(<style type="text/css">#{ style_style.write_string }</style>)
         (doc/('head')).append style
       end
-
     end
+    doc.search('//link[@docomo_css="remove_after_inline"]').remove
 
     content = doc.to_html
 
