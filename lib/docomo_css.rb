@@ -25,6 +25,10 @@ module DocomoCss
     linknodes.each do |linknode|
       href = linknode['href'] 
       next unless href && allowed_media_type?(linknode['media'])
+      if linknode['docomo_css'] == "ignore"
+        linknode.remove_attribute('docomo_css')
+        next
+      end
 
       cssfile = File.join(css_dir, href)
       cssfile.gsub!(/\?.+/, '')
