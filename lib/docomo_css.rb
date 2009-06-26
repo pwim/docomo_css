@@ -9,9 +9,10 @@ module DocomoCss
       ["a:link", "a:focus", "a:visited"].each do |k|
         @handlers[k] = PseudoSelectorHandler.new(k)
       end
-      (1..6).map {|i| "h#{i}"}.each do |k|
+      (1..6).map {|i| "h#{i}"}.concat(%w{p}).each do |k|
         @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size color})
       end
+      @handlers["p"] = UnsupportedStyleHandler.new(k, %w{font-size color})
     end
     @handlers
   end
