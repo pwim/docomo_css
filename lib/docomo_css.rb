@@ -23,7 +23,8 @@ module DocomoCss
 
     linknodes = doc/'//link[@rel="stylesheet"]'
     linknodes.each do |linknode|
-      href = linknode['href'] or next
+      href = linknode['href'] 
+      next unless href && allowed_media_type?(linknode['media'])
 
       cssfile = File.join(css_dir, href)
       cssfile.gsub!(/\?.+/, '')
@@ -44,6 +45,10 @@ module DocomoCss
 
     content.gsub!(/HTMLCSSINLINERESCAPE(\d+)::::::::/, '&#\1;')
     content
+  end
+
+  def self.allowed_media_type?(s)
+    s.nil? || s =~ /handheld|all|tty/
   end
 
   class Handler
