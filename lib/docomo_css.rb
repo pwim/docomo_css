@@ -12,7 +12,6 @@ module DocomoCss
       (1..6).map {|i| "h#{i}"}.concat(%w{p}).each do |k|
         @handlers[k] = UnsupportedStyleHandler.new(k, %w{font-size color})
       end
-      @handlers["p"] = UnsupportedStyleHandler.new(k, %w{font-size color})
     end
     @handlers
   end
