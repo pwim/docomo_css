@@ -26,7 +26,7 @@ This library will automatically do this transformation for you if you apply css 
 
 == Install
 
-  sudo gem install milk1000cc-docomo_css --source=http://gems.github.com
+  sudo gem install docomo_css
 
 == Usage
 
